@@ -1,0 +1,5 @@
+{
+  "name": "NoteGenie",
+  "description": "Create beautiful, long-form content images optimized for mobile reading. Features AI-powered text generation and custom background creation using Google Gemini.",
+  "requestFramePermissions": []
+}
