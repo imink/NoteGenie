@@ -4,6 +4,7 @@
 type GoogleGenAI = any; // Type placeholder
 
 const apiKey = process.env.API_KEY;
+const baseUrl = process.env.GEMINI_BASE_URL;
 
 // Export flag to indicate if AI features are available
 export const isAIAvailable = !!apiKey;
@@ -16,7 +17,10 @@ async function getAIClient(): Promise<GoogleGenAI> {
 
   // Dynamic import - only loads the SDK when actually needed
   const { GoogleGenAI } = await import("@google/genai");
-  return new GoogleGenAI({ apiKey });
+  return new GoogleGenAI({
+    apiKey,
+    httpOptions: baseUrl ? { baseUrl } : undefined
+  });
 }
 
 export const generateText = async (prompt: string): Promise<string> => {
