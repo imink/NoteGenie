@@ -4,7 +4,7 @@ import { Controls } from './components/Controls';
 import { PhonePreview } from './components/PhonePreview';
 import { AppState, Theme } from './types';
 import { PATTERNS, SAMPLE_TEXT } from './constants';
-import { generateText, generateBackgroundPattern } from './services/geminiService';
+import { generateText, generateBackgroundPattern, isAIAvailable } from './services/geminiService';
 
 // Helper to strip markdown syntax since we aren't using a markdown renderer anymore
 const cleanMarkdown = (text: string) => {
@@ -40,13 +40,13 @@ export default function App() {
       const lines = generated.split('\n');
       let newTitle = "Generated Note";
       let newContent = generated;
-      
+
       if (lines.length > 0) {
-          // Heuristic: If first line is short and looks like a title
-          if (lines[0].length < 50 && lines[0].length > 0) {
-              newTitle = lines[0].replace(/^#+\s*/, '').trim(); // Remove markdown headers
-              newContent = lines.slice(1).join('\n').trim();
-          }
+        // Heuristic: If first line is short and looks like a title
+        if (lines[0].length < 50 && lines[0].length > 0) {
+          newTitle = lines[0].replace(/^#+\s*/, '').trim(); // Remove markdown headers
+          newContent = lines.slice(1).join('\n').trim();
+        }
       }
 
       setAppState(prev => ({
@@ -55,7 +55,8 @@ export default function App() {
         content: newContent
       }));
     } catch (e) {
-      alert("Failed to generate text. Check API Key configuration.");
+      const errorMsg = e instanceof Error ? e.message : "Failed to generate text. Please check your API key configuration.";
+      alert(errorMsg);
     } finally {
       setIsGenerating(false);
     }
@@ -71,7 +72,8 @@ export default function App() {
         customBackground: imageUrl
       }));
     } catch (e) {
-      alert("Failed to generate background. Check API Key.");
+      const errorMsg = e instanceof Error ? e.message : "Failed to generate background. Please check your API key configuration.";
+      alert(errorMsg);
     } finally {
       setIsGenerating(false);
     }
@@ -99,26 +101,27 @@ export default function App() {
     <div className="flex flex-col md:flex-row h-screen bg-gray-100 overflow-hidden">
       {/* Mobile Header */}
       <div className="md:hidden bg-white p-4 border-b flex items-center justify-between">
-         <span className="font-bold text-indigo-600">NoteGenie</span>
-         <button className="text-sm text-gray-500" onClick={() => alert("Please use desktop for full controls")}>Beta</button>
+        <span className="font-bold text-indigo-600">NoteGenie</span>
+        <button className="text-sm text-gray-500" onClick={() => alert("Please use desktop for full controls")}>Beta</button>
       </div>
 
       {/* Left Sidebar: Controls */}
       <div className="w-full md:w-[400px] lg:w-[450px] flex-shrink-0 h-[50vh] md:h-full z-20 shadow-xl relative">
-        <Controls 
+        <Controls
           appState={appState}
           setAppState={setAppState}
           onGenerateText={handleGenerateText}
           onGenerateBackground={handleGenerateBackground}
           onDownload={handleDownload}
           isGenerating={isGenerating}
+          isAIAvailable={isAIAvailable}
         />
       </div>
 
       {/* Main Area: Preview */}
       <div className="flex-1 bg-gray-100 overflow-auto h-[50vh] md:h-full relative">
         <div className="absolute inset-0 bg-grid-slate-200 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] pointer-events-none" />
-        <PhonePreview 
+        <PhonePreview
           ref={previewRef}
           appState={appState}
           selectedPattern={selectedPattern}

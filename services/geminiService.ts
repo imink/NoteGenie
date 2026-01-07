@@ -1,8 +1,27 @@
-import { GoogleGenAI } from "@google/genai";
+// DON'T import GoogleGenAI at the top level!
+// We'll use dynamic imports to avoid loading the SDK when there's no API key
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+type GoogleGenAI = any; // Type placeholder
+
+const apiKey = process.env.API_KEY;
+
+// Export flag to indicate if AI features are available
+export const isAIAvailable = !!apiKey;
+
+// Helper to get AI client (lazy load)
+async function getAIClient(): Promise<GoogleGenAI> {
+  if (!apiKey) {
+    throw new Error("AI features require an API key. Please configure the API_KEY environment variable to enable AI-powered content generation.");
+  }
+
+  // Dynamic import - only loads the SDK when actually needed
+  const { GoogleGenAI } = await import("@google/genai");
+  return new GoogleGenAI({ apiKey });
+}
 
 export const generateText = async (prompt: string): Promise<string> => {
+  const ai = await getAIClient();
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -19,6 +38,8 @@ export const generateText = async (prompt: string): Promise<string> => {
 };
 
 export const generateBackgroundPattern = async (prompt: string): Promise<string> => {
+  const ai = await getAIClient();
+
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -28,9 +49,9 @@ export const generateBackgroundPattern = async (prompt: string): Promise<string>
         ]
       },
       config: {
-         imageConfig: {
-           aspectRatio: "9:16" // Portrait for phone background
-         }
+        imageConfig: {
+          aspectRatio: "9:16" // Portrait for phone background
+        }
       }
     });
 
